@@ -3,7 +3,7 @@ package com.surfnow.infrastructure.external;
 import com.surfnow.domain.score.SurfConditions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "surf.stormglass.api-key")
+@ConditionalOnExpression("'${surf.stormglass.api-key:}'.length() > 0")
 public class StormglassClient implements SurfDataProvider {
 
     private static final String PARAMS =

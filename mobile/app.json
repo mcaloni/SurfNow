@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "SurfNow",
+    "slug": "surf-now",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#0066CC"
+    },
+    "ios": {
+      "bundleIdentifier": "com.surfnow.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Para mostrar praias próximas a você",
+        "NSCameraUsageDescription": "Para tirar fotos das condições do mar"
+      }
+    },
+    "android": {
+      "package": "com.surfnow.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location",
+      "expo-notifications",
+      "expo-camera"
+    ],
+    "extra": {
+      "API_BASE_URL": "http://localhost:8080"
+    }
+  }
+}

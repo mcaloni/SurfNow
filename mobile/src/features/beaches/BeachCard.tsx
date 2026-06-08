@@ -4,10 +4,24 @@ import type { BeachResponse } from '@/services/beaches.service';
 
 interface Props {
   beach: BeachResponse;
+  userCoords?: { lat: number; lng: number } | null;
 }
 
-export default function BeachCard({ beach }: Props) {
+function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export default function BeachCard({ beach, userCoords }: Props) {
   const router = useRouter();
+  const distance = userCoords
+    ? distanceKm(userCoords.lat, userCoords.lng, beach.latitude, beach.longitude)
+    : null;
 
   return (
     <TouchableOpacity
@@ -15,12 +29,17 @@ export default function BeachCard({ beach }: Props) {
       onPress={() => router.push(`/beach/${beach.id}`)}
     >
       <View style={styles.header}>
-        <View>
+        <View style={styles.info}>
           <Text style={styles.name}>{beach.name}</Text>
-          <Text style={styles.location}>{beach.city}, {beach.state}</Text>
+          <Text style={styles.location}>
+            {beach.city}, {beach.state}
+            {distance != null ? `  ·  ${distance < 1 ? `${(distance * 1000).toFixed(0)}m` : `${distance.toFixed(0)}km`}` : ''}
+          </Text>
         </View>
         <ScoreBadge score={beach.score} label={beach.scoreLabel} />
       </View>
+
+      <View style={styles.divider} />
 
       <View style={styles.conditions}>
         <ConditionItem label="Onda" value={`${beach.conditions.waveHeight.toFixed(1)}m`} />
@@ -32,7 +51,7 @@ export default function BeachCard({ beach }: Props) {
 }
 
 function ScoreBadge({ score, label }: { score: number; label: string }) {
-  const color = score >= 8 ? '#00C853' : score >= 5 ? '#FFD600' : '#FF5252';
+  const color = score >= 8 ? '#00C853' : score >= 6 ? '#1976D2' : score >= 4 ? '#F9A825' : '#E53935';
   return (
     <View style={[styles.badge, { backgroundColor: color }]}>
       <Text style={styles.badgeScore}>{score.toFixed(1)}</Text>
@@ -63,13 +82,15 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  name: { fontSize: 18, fontWeight: '700', color: '#1A1A2E' },
-  location: { fontSize: 13, color: '#666', marginTop: 2 },
-  badge: { borderRadius: 8, padding: 8, alignItems: 'center', minWidth: 60 },
+  info: { flex: 1, marginRight: 12 },
+  name: { fontSize: 18, fontWeight: '700', color: '#1a1a1a' },
+  location: { fontSize: 13, color: '#888', marginTop: 3 },
+  badge: { borderRadius: 10, padding: 8, alignItems: 'center', minWidth: 64 },
   badgeScore: { fontSize: 20, fontWeight: '800', color: '#fff' },
-  badgeLabel: { fontSize: 11, color: '#fff', fontWeight: '600' },
-  conditions: { flexDirection: 'row', marginTop: 12, gap: 16 },
+  badgeLabel: { fontSize: 11, fontWeight: '600', color: '#fff', marginTop: 1 },
+  divider: { height: 1, backgroundColor: '#f0f0f0', marginVertical: 12 },
+  conditions: { flexDirection: 'row', gap: 20 },
   conditionItem: { alignItems: 'center' },
-  conditionLabel: { fontSize: 11, color: '#999' },
+  conditionLabel: { fontSize: 11, color: '#888' },
   conditionValue: { fontSize: 14, fontWeight: '600', color: '#333', marginTop: 2 },
 });

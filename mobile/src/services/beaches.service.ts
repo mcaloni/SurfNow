@@ -19,8 +19,8 @@ export interface BeachResponse {
   };
 }
 
-export const fetchBeaches = (state?: string): Promise<BeachResponse[]> =>
-  api.get('/beaches', { params: { state } }).then((r) => r.data);
+export const fetchBeaches = (params?: { state?: string; lat?: number; lng?: number }): Promise<BeachResponse[]> =>
+  api.get('/beaches', { params }).then((r) => r.data);
 
 export const fetchBeach = (id: string): Promise<BeachResponse> =>
   api.get(`/beaches/${id}`).then((r) => r.data);

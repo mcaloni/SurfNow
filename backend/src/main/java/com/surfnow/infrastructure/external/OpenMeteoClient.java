@@ -10,10 +10,11 @@ import org.springframework.web.client.RestClient;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * Fallback gratuito usando Open-Meteo Marine API.
- * Ativo automaticamente quando StormglassClient não está disponível (sem API key).
+ * Fallback gratuito combinando Open-Meteo Marine API (ondas/swell) +
+ * Open-Meteo Forecast API (vento). Ativo quando StormglassClient não está disponível.
  * Sem limite de requisições para uso não comercial.
  */
 @Slf4j
@@ -22,44 +23,60 @@ import java.util.Map;
 public class OpenMeteoClient implements SurfDataProvider {
 
     @Value("${surf.open-meteo.base-url}")
-    private String baseUrl;
+    private String marineUrl;
+
+    @Value("${surf.open-meteo.forecast-url}")
+    private String forecastUrl;
 
     @Override
     public SurfConditions getCurrentConditions(double latitude, double longitude) {
         try {
-            RestClient client = RestClient.create(baseUrl);
-
-            var response = client.get()
-                    .uri("?latitude={lat}&longitude={lng}" +
-                                    "&hourly=wave_height,wave_period,wind_wave_height," +
-                                    "swell_wave_height,swell_wave_period,swell_wave_direction" +
-                                    "&wind_speed_unit=kmh&forecast_days=1",
-                            latitude, longitude)
-                    .retrieve()
-                    .body(Map.class);
-
-            return parse(response);
+            var marineFuture = CompletableFuture.supplyAsync(() -> fetchMarine(latitude, longitude));
+            var forecastFuture = CompletableFuture.supplyAsync(() -> fetchForecast(latitude, longitude));
+            return parse(marineFuture.join(), forecastFuture.join());
         } catch (Exception e) {
             log.error("Erro ao buscar dados do Open-Meteo lat={} lng={}", latitude, longitude, e);
             throw new StormglassClient.SurfDataUnavailableException("Open-Meteo indisponível", e);
         }
     }
 
+    private Map<?, ?> fetchMarine(double lat, double lng) {
+        return RestClient.create(marineUrl).get()
+                .uri("?latitude={lat}&longitude={lng}" +
+                        "&hourly=wave_height,wave_period,swell_wave_height,swell_wave_period,swell_wave_direction" +
+                        "&forecast_days=1",
+                        lat, lng)
+                .retrieve()
+                .body(Map.class);
+    }
+
+    private Map<?, ?> fetchForecast(double lat, double lng) {
+        return RestClient.create(forecastUrl).get()
+                .uri("?latitude={lat}&longitude={lng}" +
+                        "&hourly=wind_speed_10m,wind_direction_10m" +
+                        "&wind_speed_unit=kmh&forecast_days=1",
+                        lat, lng)
+                .retrieve()
+                .body(Map.class);
+    }
+
     @SuppressWarnings("unchecked")
-    private SurfConditions parse(Map<?, ?> response) {
-        var hourly = (Map<String, List<Object>>) response.get("hourly");
-        if (hourly == null) {
-            throw new StormglassClient.SurfDataUnavailableException("Nenhum dado retornado pelo Open-Meteo");
+    private SurfConditions parse(Map<?, ?> marine, Map<?, ?> forecast) {
+        var marineHourly = (Map<String, List<Object>>) marine.get("hourly");
+        var forecastHourly = (Map<String, List<Object>>) forecast.get("hourly");
+
+        if (marineHourly == null) {
+            throw new StormglassClient.SurfDataUnavailableException("Nenhum dado retornado pelo Open-Meteo Marine");
         }
 
         return new SurfConditions(
-                getFirst(hourly, "wave_height"),
-                getFirst(hourly, "wave_period"),
-                0,  // Open-Meteo Marine não inclui vento neste endpoint
-                0,
-                getFirst(hourly, "swell_wave_direction"),
-                getFirst(hourly, "swell_wave_height"),
-                getFirst(hourly, "swell_wave_period"),
+                getFirst(marineHourly, "wave_height"),
+                getFirst(marineHourly, "wave_period"),
+                forecastHourly != null ? getFirst(forecastHourly, "wind_speed_10m") : 0,
+                forecastHourly != null ? getFirst(forecastHourly, "wind_direction_10m") : 0,
+                getFirst(marineHourly, "swell_wave_direction"),
+                getFirst(marineHourly, "swell_wave_height"),
+                getFirst(marineHourly, "swell_wave_period"),
                 LocalDateTime.now()
         );
     }

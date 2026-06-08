@@ -5,7 +5,7 @@ const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL ?? 'http://localhost:
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api/v1`,
-  timeout: 10000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 

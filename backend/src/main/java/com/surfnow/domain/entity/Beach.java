@@ -61,4 +61,7 @@ public class Beach {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "windguru_spot_id")
+    private Integer windguruSpotId;
 }

@@ -23,8 +23,11 @@ public class BeachController {
      * Filtro opcional por estado: ?state=SP
      */
     @GetMapping
-    public List<BeachResponse> listBeaches(@RequestParam(required = false) String state) {
-        return listBestBeachesUseCase.execute(state).stream()
+    public List<BeachResponse> listBeaches(
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lng) {
+        return listBestBeachesUseCase.execute(state, lat, lng).stream()
                 .map(BeachResponse::from)
                 .toList();
     }

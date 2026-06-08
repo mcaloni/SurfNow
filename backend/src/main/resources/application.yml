@@ -43,6 +43,13 @@ surf:
     base-url: https://api.stormglass.io/v2
   open-meteo:
     base-url: https://marine-api.open-meteo.com/v1/marine
+    forecast-url: https://api.open-meteo.com/v1/forecast
+  windguru:
+    base-url: https://www.windguru.cz
+    # Credenciais Pro — deixar vazios para usar scraping gratuito como fallback.
+    # ATENÇÃO: use a senha SECUNDÁRIA (Conta → Login → API password), não a senha principal.
+    username: ${WINDGURU_USERNAME:}
+    password: ${WINDGURU_PASSWORD:}
 
 management:
   endpoints:

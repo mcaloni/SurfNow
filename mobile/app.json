@@ -7,7 +7,8 @@
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
-      "backgroundColor": "#0066CC"
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0F1E"
     },
     "ios": {
       "bundleIdentifier": "com.surfnow.app",
@@ -18,6 +19,7 @@
     },
     "android": {
       "package": "com.surfnow.app",
+      "usesCleartextTraffic": true,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "CAMERA"

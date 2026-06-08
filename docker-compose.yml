@@ -24,6 +24,8 @@ services:
       DATABASE_USER: wave
       DATABASE_PASSWORD: wave123
       STORMGLASS_API_KEY: ${STORMGLASS_API_KEY:-}
+      WINDGURU_USERNAME: ${WINDGURU_USERNAME:-}
+      WINDGURU_PASSWORD: ${WINDGURU_PASSWORD:-}
       AWS_REGION: ${AWS_REGION:-us-east-1}
       S3_BUCKET: ${S3_BUCKET:-surf-now-photos}
     depends_on:
